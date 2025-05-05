@@ -5,29 +5,30 @@
     <h1>{% block title %}Análisis de Emociones en Texto{% endblock %}</h1>
 
     <!-- Input Mode Selection -->
-    <div class="mb-3">
+    <div class="mb-3 input-mode-selector"> <!-- Added class for styling -->
         <label class="form-label">Modo de Entrada:</label>
-        <div>
+        <span> <!-- Wrap radio buttons for better layout control if needed -->
             <input type="radio" id="modeDraw" name="inputMode" value="draw" checked>
             <label for="modeDraw">Dibujar</label>
             <input type="radio" id="modeType" name="inputMode" value="type" class="ms-3">
             <label for="modeType">Escribir</label>
-        </div>
+        </span>
     </div>
 
     <!-- Drawing Canvas -->
-    <canvas id="drawingCanvas" width="800" height="300" style="border: 1px solid #ccc; display: block;"></canvas>
+    <canvas id="drawingCanvas" width="800" height="300"></canvas> <!-- Removed inline style -->
 
     <!-- Text Area -->
-    <textarea id="textInput" rows="5" class="form-control" placeholder="Escribe tu texto aquí..." style="display: none; width: 800px; height: 300px;"></textarea>
+    <textarea id="textInput" rows="5" class="form-control" placeholder="Escribe tu texto aquí..."></textarea>
+    <!-- Removed inline style -->
 
-    <div class="mt-2">
+    <div class="mt-3"> <!-- Increased margin-top -->
         <button id="clearBtn" class="btn btn-secondary">Limpiar</button>
         <button id="submitBtn" class="btn btn-primary">Analizar Emoción</button>
     </div>
 
-    <p><strong>Texto Detectado/Ingresado:</strong>
-        <span id="ocrText" style="background-color: #f8f9fa; border-radius: 3px; display: block; margin-top: 2px; min-height: 24px;"></span>
+    <p class="mt-3"><strong>Texto Detectado/Ingresado:</strong> <!-- Added margin-top -->
+        <span id="ocrText"></span> <!-- Removed inline style -->
     </p>
 
     <br>
@@ -55,8 +56,9 @@
 
     function drawGuidelines() {
         const lineSpacing = 50;
-        ctx.strokeStyle = '#ddd';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#e2e8f0'; // Lighter guideline color
+        ctx.lineWidth = 0.5; // Thinner lines
+        ctx.setLineDash([5, 5]); // Dashed lines
         for (let y = lineSpacing; y < canvas.height; y += lineSpacing) {
             ctx.beginPath();
             ctx.moveTo(0, y);
@@ -65,6 +67,7 @@
         }
         ctx.strokeStyle = '#333';
         ctx.lineWidth = 4;
+        ctx.setLineDash([]); // Solid lines
     }
 
     function getInputMode() {
@@ -87,16 +90,17 @@
     modeTypeRadio.addEventListener('change', toggleInputMode);
 
     function clearInputs() {
-        ctx.fillStyle = "#fff";
+        ctx.fillStyle = "#fdfdfd"; // Match canvas background
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        drawGuidelines();
-        ctx.beginPath();
+        drawGuidelines(); // Redraw guidelines after clearing
+        ctx.beginPath(); // Reset path after clearing
         textInput.value = '';
         ocrTextSpan.textContent = '';
         predictionSummaryP.innerHTML = '';
+        predictionSummaryP.removeAttribute('style');  // clear any color/fontWeight
         probList.innerHTML = '';
     }
-    clearInputs();
+    clearInputs(); // Initial clear and guideline draw
 
     function getMousePos(e) {
         const rect = canvas.getBoundingClientRect();
@@ -138,8 +142,8 @@
     canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('mouseup', endPosition);
     canvas.addEventListener('mouseout', endPosition);
-    canvas.addEventListener('touchstart', startPosition);
-    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchstart', startPosition, { passive: false }); // Add passive: false if preventDefault is used
+    canvas.addEventListener('touchmove', draw, { passive: false });
     canvas.addEventListener('touchend', endPosition);
 
     async function submitInput() {
@@ -149,22 +153,25 @@
         if (mode === 'draw') {
             const dataURL = canvas.toDataURL('image/png');
             if (isCanvasBlank(canvas)) {
-                ocrTextSpan.textContent = 'Por favor escribe un texto.';
+                ocrTextSpan.textContent = ''; // Clear processing message
+                predictionSummaryP.innerHTML = '<span style="color: #e53e3e;">Por favor dibuja o escribe un texto.</span>'; // Use error color
                 return;
             }
             payload = { image: dataURL };
-            ocrTextSpan.textContent = 'Procesando el texto escrito...';
+            ocrTextSpan.textContent = 'Procesando el texto dibujado...';
         } else {
             const text = textInput.value.trim();
             if (!text) {
-                ocrTextSpan.textContent = 'Por favor escribe algo.';
+                ocrTextSpan.textContent = ''; // Clear processing message
+                predictionSummaryP.innerHTML = '<span style="color: #e53e3e;">Por favor escribe algo.</span>'; // Use error color
                 return;
             }
             payload = { text: text };
             ocrTextSpan.textContent = 'Procesando texto...';
         }
 
-        predictionSummaryP.innerHTML = '';
+        predictionSummaryP.innerHTML = 'Analizando...'; 
+        predictionSummaryP.removeAttribute('style');  // ensure no stale styles
         probList.innerHTML = '';
         submitBtn.disabled = true;
         clearBtn.disabled = true;
@@ -199,9 +206,28 @@
                     probList.innerHTML = '';
                 }
             } else if (typeof result.prediction === 'string') {
-                const sentimentColor = result.prediction.includes("positivo") ? "#28a745" :
-                    result.prediction.includes("neutro") ? "#007bff" : "#dc3545";
-                predictionSummaryP.innerHTML = `<span style="color: ${sentimentColor}; font-weight: bold;">${result.prediction}</span>`;
+                let sentimentColor = '#4a5568';
+                let sentimentWeight = '500'; // Default font weight
+                const predictionText = result.prediction.toLowerCase();
+
+                if (predictionText.includes("positiva")) {
+                    sentimentColor = '#2f855a';
+                    sentimentWeight = '800'; // Set font weight to semi-bold for positive
+                } else if (predictionText.includes("neutral")) {
+                    sentimentColor = '#2b6cb0';
+                    sentimentWeight = '600'; // Set font weight to semi-bold for positive
+                } else if (predictionText.includes("negativa")) {
+                    sentimentColor = '#c53030';
+                    // Keep default weight 500
+                } else if (predictionText.includes("error") || predictionText.includes("fallo") || predictionText.includes("vacío")) {
+                    sentimentColor = '#e53e3e';
+                    // Keep default weight 500
+                }
+
+                predictionSummaryP.textContent = result.prediction;
+                predictionSummaryP.style.color = sentimentColor;
+                predictionSummaryP.style.fontWeight = sentimentWeight; // Apply the determined weight
+
                 probList.innerHTML = '';
             } else {
                 predictionSummaryP.textContent = 'Respuesta inesperada del servidor.';
@@ -211,7 +237,7 @@
         } catch (err) {
             console.error("Fetch error:", err);
             ocrTextSpan.textContent = ocrTextSpan.textContent || 'Error durante el procesamiento.';
-            predictionSummaryP.textContent = 'Ocurrió un error de comunicación. Revisa la consola.';
+            predictionSummaryP.innerHTML = '<span style="color: #e53e3e;">Ocurrió un error de comunicación. Revisa la consola.</span>';
             probList.innerHTML = '';
         } finally {
             submitBtn.disabled = false;

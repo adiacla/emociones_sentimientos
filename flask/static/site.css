@@ -1,108 +1,253 @@
+/* Use a modern font stack */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f4f7f6; /* Slightly off-white background */
+}
+
 .navbar {
-    background-color: lightslategray;
-    font-size: 1em;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-    color: white;
-    padding: 8px 5px 8px 5px;
+  background-color: #4a5568; /* Darker slate gray */
+  font-size: 1em;
+  color: white;
+  padding: 10px 15px; /* Increased padding */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
 }
 
 .navbar a {
-    text-decoration: none;
-    color: inherit;
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+.navbar a:hover {
+  color: #e2e8f0; /* Lighter color on hover */
 }
 
 .navbar-brand {
-    font-size: 1.2em;
-    font-weight: 600;
+  font-size: 1.3em; /* Slightly larger */
+  font-weight: 700; /* Bolder */
 }
 
 .navbar-item {
-    font-variant: small-caps;
-    margin-left: 30px;
+  font-variant: normal; /* Remove small-caps for cleaner look */
+  margin-left: 25px;
+  font-weight: 500;
 }
 
 .body-content {
-    padding: 5px;
-    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 20px 15px; /* Add vertical padding */
 }
 
 /* Enhanced container */
 .container {
-    max-width: 900px;
-    margin: 40px auto;
-    padding: 20px;
-    background: #f9f9f9;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    text-align: center;
+  max-width: 850px; /* Slightly narrower */
+  margin: 30px auto; /* Reduced top margin */
+  padding: 30px; /* Increased padding */
+  background: #ffffff; /* White background */
+  border-radius: 12px; /* More rounded corners */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); /* Softer, larger shadow */
+  text-align: center;
 }
 
 /* Styled header */
 .container h1 {
-    margin-bottom: 20px;
-    font-size: 2em;
-    color: #333;
+  margin-bottom: 25px;
+  font-size: 2.2em; /* Larger */
+  color: #2d3748; /* Darker heading color */
+  font-weight: 600;
+}
+.container h2 {
+  margin-top: 30px; /* Space above results */
+  margin-bottom: 15px;
+  font-size: 1.6em;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+/* Input Mode Selection */
+.input-mode-selector label {
+  margin-right: 15px;
+  font-size: 1.1em;
+  color: #4a5568;
+}
+.input-mode-selector input[type="radio"] {
+  margin-right: 5px;
 }
 
 /* Style canvas */
 #drawingCanvas {
-    width: 100%;
-    max-width: 800px;
-    height: 300px;
-    background-color: #fff;
-    border: 2px solid #ccc;
-    border-radius: 8px;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
-    touch-action: none; /* disable browser touch gestures */
-    cursor: crosshair;
-    margin-bottom: 15px;
+  width: 100%;
+  max-width: 750px; /* Adjust max-width */
+  height: 300px;
+  background-color: #fdfdfd; /* Very light grey */
+  border: 1px solid #d1d5db; /* Lighter border */
+  border-radius: 8px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  touch-action: none;
+  cursor: crosshair;
+  margin: 15px auto; /* Center canvas/textarea */
+  display: block; /* Ensure block display for centering */
+}
+
+/* Style Text Area */
+#textInput {
+  width: 100%;
+  max-width: 750px; /* Match canvas */
+  height: 300px; /* Match canvas */
+  border: 1px solid #d1d5db; /* Lighter border */
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 1.1em;
+  margin: 15px auto; /* Center canvas/textarea */
+  display: none; /* Initially hidden */
+  resize: vertical; /* Allow vertical resize */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 /* Button styles */
 .btn {
-    padding: 10px 20px;
-    margin: 0 10px;
-    border: none;
-    border-radius: 5px;
-    font-size: 1em;
-    cursor: pointer;
-    transition: background 0.2s ease;
+  padding: 12px 25px; /* Larger padding */
+  margin: 5px 10px; /* Adjust margin */
+  border: none;
+  border-radius: 6px; /* Slightly less rounded */
+  font-size: 1.05em; /* Slightly larger font */
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease,
+    transform 0.1s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+.btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .btn-primary {
-    background-color: #007bff;
-    color: #fff;
+  background-color: #3182ce; /* Tailwind Blue 600 */
+  color: #fff;
 }
 .btn-primary:hover {
-    background-color: #0056b3;
+  background-color: #2b6cb0; /* Tailwind Blue 700 */
 }
 .btn-secondary {
-    background-color: #6c757d;
-    color: #fff;
+  background-color: #a0aec0; /* Tailwind Gray 500 */
+  color: #fff;
 }
 .btn-secondary:hover {
-    background-color: #5a6268;
+  background-color: #718096; /* Tailwind Gray 600 */
+}
+
+/* Detected Text Area */
+#ocrText {
+  display: block;
+  margin-top: 15px;
+  padding: 10px 15px;
+  background-color: #edf2f7; /* Lighter gray background */
+  border-radius: 6px;
+  min-height: 24px;
+  font-size: 1.05em;
+  color: #4a5568; /* Darker text */
+  border: 1px solid #e2e8f0; /* Subtle border */
+  text-align: center; /* Align text center */
+  word-wrap: break-word; /* Wrap long words */
+}
+
+/* Prediction Summary */
+#predictionSummary {
+  margin-top: 10px;
+  font-size: 1.25em; /* Increased font size */
+  min-height: 1.5em; /* Reserve space */
+  font-weight: 500; /* Slightly bolder overall summary text */
+}
+#predictionSummary b {
+  font-weight: 700; /* Make bold parts even bolder */
 }
 
 /* Emotion list */
 #probList {
-    list-style: none;
-    padding: 0;
-    margin-top: 20px;
-    display: inline-block;
-    text-align: left;
-    width: calc(100% - 40px);
-    max-width: 600px;
+  list-style: none;
+  padding: 0;
+  margin-top: 15px;
+  display: inline-block;
+  text-align: left;
+  width: 100%; /* Use full width */
+  max-width: 550px; /* Limit max width */
+  border: 1px solid #e2e8f0; /* Add a light border */
+  border-radius: 8px;
+  overflow: hidden; /* Clip children to rounded corners */
 }
 #probList li {
-    display: flex;
-    justify-content: space-between;
-    padding: 6px 10px;
-    border-bottom: 1px solid #e0e0e0;
-    font-size: 1em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px; /* Increased padding */
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 1.05em;
+  background-color: #fff;
+  transition: background-color 0.2s ease;
 }
+#probList li:last-child {
+  border-bottom: none; /* Remove border from last item */
+}
+#probList li:nth-child(odd) {
+  /* background-color: #f7fafc; /* Subtle striping */
+}
+#probList li:hover {
+  background-color: #edf2f7; /* Highlight on hover */
+}
+
+#probList li span:first-child {
+  font-weight: 500;
+  color: #2d3748;
+}
+#probList li span:last-child {
+  font-weight: 600;
+  color: #4a5568;
+  background-color: #e2e8f0; /* Badge-like background */
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.95em;
+}
+
 /* Primary emotion (first in list) */
-.primary-emotion {
+#probList li:first-child {
+  background-color: #ebf8ff; /* Light blue background for primary */
+}
+#probList li:first-child span:first-child {
+  font-weight: 700; /* Bolder primary emotion */
+  color: #2c5282; /* Darker blue */
+}
+#probList li:first-child span:last-child {
+  background-color: #bee3f8; /* Blue badge */
+  color: #2c5282;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .container {
+    padding: 20px;
+    margin: 20px auto;
+  }
+  .container h1 {
+    font-size: 1.8em;
+  }
+  .container h2 {
     font-size: 1.4em;
-    font-weight: bold;
-    color: #222;
+  }
+  #drawingCanvas,
+  #textInput {
+    height: 250px;
+  }
+  .btn {
+    padding: 10px 20px;
+    font-size: 1em;
+  }
+  #probList {
+    max-width: 100%;
+  }
 }
