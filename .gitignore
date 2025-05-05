@@ -1,0 +1,4 @@
+/embeddings/
+flask/best_model_emociones_emb_fase2.keras
+flask/.venv/
+flask/best_model_emociones_emb_fase1.keras

@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>{% block title %}Análisis de Emociones en Texto{% endblock %}</h1>
+
+    <!-- Input Mode Selection -->
+    <div class="mb-3">
+        <label class="form-label">Modo de Entrada:</label>
+        <div>
+            <input type="radio" id="modeDraw" name="inputMode" value="draw" checked>
+            <label for="modeDraw">Dibujar</label>
+            <input type="radio" id="modeType" name="inputMode" value="type" class="ms-3">
+            <label for="modeType">Escribir</label>
+        </div>
+    </div>
+
+    <!-- Drawing Canvas -->
+    <canvas id="drawingCanvas" width="800" height="300" style="border: 1px solid #ccc; display: block;"></canvas>
+
+    <!-- Text Area -->
+    <textarea id="textInput" rows="5" class="form-control" placeholder="Escribe tu texto aquí..." style="display: none; width: 800px; height: 300px;"></textarea>
+
+    <div class="mt-2">
+        <button id="clearBtn" class="btn btn-secondary">Limpiar</button>
+        <button id="submitBtn" class="btn btn-primary">Analizar Emoción</button>
+    </div>
+
+    <p><strong>Texto Detectado/Ingresado:</strong>
+        <span id="ocrText" style="background-color: #f8f9fa; border-radius: 3px; display: block; margin-top: 2px; min-height: 24px;"></span>
+    </p>
+
+    <br>
+    <h2>Resultados:</h2>
+    <p id="predictionSummary"></p>
+    <ul id="probList"></ul>
+</div>
+
+<script>
+    const canvas = document.getElementById('drawingCanvas');
+    const ctx = canvas.getContext('2d');
+    const textInput = document.getElementById('textInput');
+    const clearBtn = document.getElementById('clearBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const ocrTextSpan = document.getElementById('ocrText');
+    const probList = document.getElementById('probList');
+    const predictionSummaryP = document.getElementById('predictionSummary');
+    const modeDrawRadio = document.getElementById('modeDraw');
+    const modeTypeRadio = document.getElementById('modeType');
+
+    let drawing = false;
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#333';
+
+    function drawGuidelines() {
+        const lineSpacing = 50;
+        ctx.strokeStyle = '#ddd';
+        ctx.lineWidth = 1;
+        for (let y = lineSpacing; y < canvas.height; y += lineSpacing) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.stroke();
+        }
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 4;
+    }
+
+    function getInputMode() {
+        return document.querySelector('input[name="inputMode"]:checked').value;
+    }
+
+    function toggleInputMode() {
+        const mode = getInputMode();
+        if (mode === 'draw') {
+            canvas.style.display = 'block';
+            textInput.style.display = 'none';
+        } else {
+            canvas.style.display = 'none';
+            textInput.style.display = 'block';
+        }
+        clearInputs();
+    }
+
+    modeDrawRadio.addEventListener('change', toggleInputMode);
+    modeTypeRadio.addEventListener('change', toggleInputMode);
+
+    function clearInputs() {
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        drawGuidelines();
+        ctx.beginPath();
+        textInput.value = '';
+        ocrTextSpan.textContent = '';
+        predictionSummaryP.innerHTML = '';
+        probList.innerHTML = '';
+    }
+    clearInputs();
+
+    function getMousePos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.clientX ?? (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY ?? (e.touches && e.touches[0].clientY);
+        return {
+            x: clientX - rect.left,
+            y: clientY - rect.top
+        };
+    }
+
+    function startPosition(e) {
+        if (getInputMode() !== 'draw') return;
+        e.preventDefault();
+        drawing = true;
+        const { x, y } = getMousePos(e);
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    }
+
+    function endPosition(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        drawing = false;
+    }
+
+    function draw(e) {
+        if (!drawing || getInputMode() !== 'draw') return;
+        e.preventDefault();
+        const { x, y } = getMousePos(e);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+    }
+
+    clearBtn.addEventListener('click', clearInputs);
+    submitBtn.addEventListener('click', submitInput);
+
+    canvas.addEventListener('mousedown', startPosition);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', endPosition);
+    canvas.addEventListener('mouseout', endPosition);
+    canvas.addEventListener('touchstart', startPosition);
+    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchend', endPosition);
+
+    async function submitInput() {
+        const mode = getInputMode();
+        let payload = {};
+
+        if (mode === 'draw') {
+            const dataURL = canvas.toDataURL('image/png');
+            if (isCanvasBlank(canvas)) {
+                ocrTextSpan.textContent = 'Por favor escribe un texto.';
+                return;
+            }
+            payload = { image: dataURL };
+            ocrTextSpan.textContent = 'Procesando el texto escrito...';
+        } else {
+            const text = textInput.value.trim();
+            if (!text) {
+                ocrTextSpan.textContent = 'Por favor escribe algo.';
+                return;
+            }
+            payload = { text: text };
+            ocrTextSpan.textContent = 'Procesando texto...';
+        }
+
+        predictionSummaryP.innerHTML = '';
+        probList.innerHTML = '';
+        submitBtn.disabled = true;
+        clearBtn.disabled = true;
+
+        try {
+            const res = await fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const result = await res.json();
+
+            console.log("Backend response:", result);
+            console.log("Detected text:", result.text);
+
+            ocrTextSpan.textContent = result.text || '(sin texto)';
+
+            if (typeof result.prediction === 'object' && result.prediction !== null) {
+                const probs = result.prediction.all_probabilities || {};
+                const sorted = Object.entries(probs).sort((a, b) => b[1] - a[1]).slice(0, 3);
+                if (sorted.length === 3) {
+                    const summaryMsg = `El texto demuestra <b>"${sorted[0][0]}"</b> con baja tendencia a <b>"${sorted[1][0]}"</b> y muy leve sesgo <b>"${sorted[2][0]}"</b>`;
+                    predictionSummaryP.innerHTML = `<span style="color: #444;">${summaryMsg}</span>`;
+                    probList.innerHTML = '';
+                    sorted.forEach(([emotion, p]) => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `<span>${emotion}</span><span>${(p * 100).toFixed(1)}%</span>`;
+                        probList.appendChild(li);
+                    });
+                } else {
+                    predictionSummaryP.textContent = 'Predicción incompleta.';
+                    probList.innerHTML = '';
+                }
+            } else if (typeof result.prediction === 'string') {
+                const sentimentColor = result.prediction.includes("positivo") ? "#28a745" :
+                    result.prediction.includes("neutro") ? "#007bff" : "#dc3545";
+                predictionSummaryP.innerHTML = `<span style="color: ${sentimentColor}; font-weight: bold;">${result.prediction}</span>`;
+                probList.innerHTML = '';
+            } else {
+                predictionSummaryP.textContent = 'Respuesta inesperada del servidor.';
+                probList.innerHTML = '';
+            }
+
+        } catch (err) {
+            console.error("Fetch error:", err);
+            ocrTextSpan.textContent = ocrTextSpan.textContent || 'Error durante el procesamiento.';
+            predictionSummaryP.textContent = 'Ocurrió un error de comunicación. Revisa la consola.';
+            probList.innerHTML = '';
+        } finally {
+            submitBtn.disabled = false;
+            clearBtn.disabled = false;
+        }
+    }
+
+    function isCanvasBlank(canvasToCheck) {
+        const context = canvasToCheck.getContext('2d');
+        const pixelBuffer = new Uint32Array(
+            context.getImageData(0, 0, canvasToCheck.width, canvasToCheck.height).data.buffer
+        );
+        return !pixelBuffer.some(pixel => pixel !== 0xFFFFFFFF);
+    }
+
+    toggleInputMode();
+</script>
+{% endblock %}
