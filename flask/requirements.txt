@@ -12,3 +12,4 @@ verovio
 rapidocr
 pysentimiento
 onnxruntime
+tf-keras
