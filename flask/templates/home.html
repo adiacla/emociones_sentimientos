@@ -3,6 +3,11 @@
 {% block content %}
 <div class="container">
     <h1>{% block title %}Análisis de Emociones en Texto{% endblock %}</h1>
+    <p class="lead mb-4">
+        Esta aplicación te permite ingresar una frase (dibujándola o escribiéndola) para analizar su sentimiento.
+        Detectará si la frase es positiva, neutra o negativa. En caso de ser negativa, también identificará las
+        emociones predominantes.
+    </p>
 
     <!-- Input Mode Selection -->
     <div class="mb-3 input-mode-selector"> <!-- Added class for styling -->
@@ -35,6 +40,16 @@
     <h2>Resultados:</h2>
     <p id="predictionSummary"></p>
     <ul id="probList"></ul>
+
+    <hr class="mt-5">
+    <footer class="mt-4 mb-4 text-center">
+        <p class="small">
+            <strong>Descargo de responsabilidad:</strong> Esta no es una aplicación con diagnósticos reales.
+            <br>
+            Desarrollada por Alfredo Diaz <br> Centro de Desarrollo Tecnológico Smart Regions Center.
+        </p>
+        <img src="../static/logocdt.png" alt="Logo Smart Regions Center" style="max-height: 100px; margin-top: 10px;">
+    </footer>
 </div>
 
 <script>
@@ -56,18 +71,20 @@
 
     function drawGuidelines() {
         const lineSpacing = 50;
-        ctx.strokeStyle = '#e2e8f0'; // Lighter guideline color
-        ctx.lineWidth = 0.5; // Thinner lines
-        ctx.setLineDash([5, 5]); // Dashed lines
+        ctx.strokeStyle = '#cccccc'; // Darker guideline color
+        ctx.lineWidth = 1; // Thicker lines
+        ctx.setLineDash([]); // Solid lines for guidelines, or adjust dash if preferred e.g. [2, 3]
+        // Draw horizontal lines
         for (let y = lineSpacing; y < canvas.height; y += lineSpacing) {
             ctx.beginPath();
             ctx.moveTo(0, y);
             ctx.lineTo(canvas.width, y);
             ctx.stroke();
         }
-        ctx.strokeStyle = '#333';
-        ctx.lineWidth = 4;
-        ctx.setLineDash([]); // Solid lines
+        // Vertical lines removed
+        ctx.strokeStyle = '#333'; // Reset for drawing
+        ctx.lineWidth = 4;       // Reset for drawing
+        ctx.setLineDash([]);     // Reset for drawing
     }
 
     function getInputMode() {
@@ -106,9 +123,15 @@
         const rect = canvas.getBoundingClientRect();
         const clientX = e.clientX ?? (e.touches && e.touches[0].clientX);
         const clientY = e.clientY ?? (e.touches && e.touches[0].clientY);
+
+        // Calculate scaling factors to handle CSS scaling or differences
+        // between canvas resolution and its displayed size.
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+
         return {
-            x: clientX - rect.left,
-            y: clientY - rect.top
+            x: (clientX - rect.left) * scaleX,
+            y: (clientY - rect.top) * scaleY
         };
     }
 
@@ -170,7 +193,7 @@
             ocrTextSpan.textContent = 'Procesando texto...';
         }
 
-        predictionSummaryP.innerHTML = 'Analizando...'; 
+        predictionSummaryP.innerHTML = 'Analizando...';
         predictionSummaryP.removeAttribute('style');  // ensure no stale styles
         probList.innerHTML = '';
         submitBtn.disabled = true;
